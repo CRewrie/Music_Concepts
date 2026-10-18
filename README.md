@@ -2,6 +2,8 @@
 
 Interactive, playful music-theory lessons that run in the browser. No build step, no dependencies.
 
+**English & Deutsch:** switch with the 🇩🇪/🇬🇧 button in the header. German mode uses German note names (H, B, Fis, Es, C-Dur, a-Moll).
+
 **Module 1: Church Modes, the "DOS layer" of Western music.**
 Major and minor keys are the Windows you use every day; the church modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian) are the older system underneath. The course answers: *how exactly did we get from the modes to today's 24 keys?*
 
@@ -42,7 +44,8 @@ GitHub Pages → *Deploy from a branch* → `main` / root. `.nojekyll` is includ
 ```
 index.html
 css/style.css
-js/theory.js    modes, spelling, chords
+js/i18n.js      language switch, tr(en, de)
+js/theory.js    modes, spelling, chords, note-name display
 js/audio.js     Web Audio synth, drone, scheduler
 js/ui.js        DOM helpers, keyboard widget, progress store
 js/quiz.js      question types, card bank, spaced-repetition sessions

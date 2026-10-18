@@ -62,10 +62,12 @@ h3::before { content: '## '; opacity: .5; }
 .xpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--amber), var(--green)); transition: width .5s; }
 .icon-btn { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; }
 .icon-btn:hover { color: var(--red); border-color: var(--red); }
+.lang-btn { background: none; border: 1px solid var(--line); color: var(--text); border-radius: 6px; height: 30px; padding: 0 10px; font: 600 .8rem var(--mono); cursor: pointer; white-space: nowrap; }
+.lang-btn:hover { border-color: var(--amber); color: var(--amber); }
 @media (max-width: 640px) {
   .top { gap: 8px 12px; }
   .hud { order: 3; width: 100%; margin-left: 0; }
-  .icon-btn { margin-left: auto; }
+  .lang-btn { margin-left: auto; }
   .xpbar { flex: 1; }
 }
 

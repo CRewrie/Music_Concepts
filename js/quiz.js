@@ -34,72 +34,90 @@ const Quiz = (() => {
     return { options, answer: options.indexOf(correct) };
   };
 
+  const D = T.dispNote;
+  const ordinal = (n) => tr(n + (['st', 'nd', 'rd'][n - 1] || 'th'), n + '.');
+
   // Lesson 1: what is a mode
-  card('l1-what', 'boot', () => ({
-    kind: 'mc',
-    prompt: 'C major and A minor use exactly the same 7 notes. What makes them sound different?',
-    ...mcOpts('Which note feels like "home"', ['Which note feels like "home"', 'The tempo', 'Using black keys', 'The volume']),
-    explain: 'A mode is a set of notes PLUS a home note (tonic). Same notes, different home = different mood.',
-  }));
+  card('l1-what', 'boot', () => {
+    const right = tr('Which note feels like "home"', 'Welcher Ton sich wie „Zuhause“ anfühlt');
+    return {
+      kind: 'mc',
+      prompt: tr('C major and A minor use exactly the same 7 notes. What makes them sound different?',
+        'C-Dur und a-Moll benutzen genau dieselben 7 Töne. Warum klingen sie trotzdem verschieden?'),
+      ...mcOpts(right, [right, tr('The tempo', 'Das Tempo'), tr('Using black keys', 'Die schwarzen Tasten'), tr('The volume', 'Die Lautstärke')]),
+      explain: tr('A mode is a set of notes PLUS a home note (tonic). Same notes, different home = different mood.',
+        'Ein Modus ist ein Tonvorrat PLUS ein Zuhause-Ton (Grundton). Gleiche Töne, anderes Zuhause = andere Stimmung.'),
+    };
+  });
   T.MODES.forEach(m => card(`l1-white-${m.id}`, 'boot', () => ({
     kind: 'mc',
-    prompt: `You play only white keys, starting and ending on <b>${m.whiteKey}</b>. Which mode is that?`,
+    prompt: tr(`You play only white keys, starting and ending on <b>${m.whiteKey}</b>. Which mode is that?`,
+      `Du spielst nur weiße Tasten, von <b>${D(m.whiteKey)}</b> bis <b>${D(m.whiteKey)}</b>. Welcher Modus ist das?`),
     ...mcOpts(m.name, T.MODES.map(x => x.name)),
-    explain: `${m.whiteKey} → ${m.whiteKey} on white keys is ${m.name}. ${m.today !== '(Almost never used)' ? 'Today we call it: ' + m.today + '.' : ''}`,
-    play: () => Sound.scale(T.scaleMidi(m.whiteKey, m.steps, m.whiteKey >= 'G' || m.whiteKey === 'A' || m.whiteKey === 'B' ? 3 : 4), { updown: false }),
+    explain: `${D(m.whiteKey)} → ${D(m.whiteKey)} ${tr('on white keys is', 'auf weißen Tasten ist')} ${m.name}. ${m.id !== 'locrian' ? tr('Today we call it: ', 'Heute nennen wir das: ') + m.today + '.' : ''}`,
+    play: () => Sound.scale(T.scaleMidi(m.whiteKey, m.steps, 'CDEF'.includes(m.whiteKey) ? 4 : 3), { updown: false }),
   })));
 
   // Lesson 2: the white-key trick
   T.MODES.forEach(m => card(`l2-key-${m.id}`, 'dir', () => ({
     kind: 'mc',
-    prompt: `On which white key does ${modeTag(m)} start?`,
-    ...mcOpts(m.whiteKey, T.LETTERS),
-    explain: `I-D-P-L-M-A-L ↔ C-D-E-F-G-A-B. ${m.name} is mode #${m.degree}, so it starts on ${m.whiteKey}.`,
+    prompt: tr(`On which white key does ${modeTag(m)} start?`, `Auf welcher weißen Taste beginnt ${modeTag(m)}?`),
+    ...mcOpts(D(m.whiteKey), T.LETTERS.map(D)),
+    explain: tr(`I-D-P-L-M-A-L ↔ C-D-E-F-G-A-B. ${m.name} is mode #${m.degree}, so it starts on ${m.whiteKey}.`,
+      `I-D-P-L-M-Ä-L ↔ C-D-E-F-G-A-H. ${m.name} ist Modus Nr. ${m.degree}, beginnt also auf ${D(m.whiteKey)}.`),
   })));
   T.MODES.forEach(m => card(`l2-steps-${m.id}`, 'dir', () => ({
     kind: 'mc',
-    prompt: `Which mode has the step pattern <code class="steps">${T.STEP_NAMES(m.steps).join(' ')}</code>?`,
+    prompt: tr(`Which mode has the step pattern <code class="steps">${T.STEP_NAMES(m.steps).join(' ')}</code>?`,
+      `Welcher Modus hat das Schrittmuster <code class="steps">${T.STEP_NAMES(m.steps).join(' ')}</code>?`),
     ...mcOpts(m.name, T.MODES.map(x => x.name)),
-    explain: `W = whole step, H = half step. Every mode is the same cycle W W H W W W H, started at a different point. ${m.name} starts at position ${m.degree}.`,
+    explain: tr(`W = whole step, H = half step. Every mode is the same cycle W W H W W W H, started at a different point. ${m.name} starts at position ${m.degree}.`,
+      `G = Ganzton, H = Halbton. Jeder Modus ist derselbe Kreislauf G G H G G G H, nur an einer anderen Stelle begonnen. ${m.name} beginnt an Position ${m.degree}.`),
   })));
-  card('l2-mnemonic', 'dir', () => ({
-    kind: 'mc',
-    prompt: 'Which order is correct (starting on C, D, E, F, G, A, B)?',
-    ...mcOpts('Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian', [
-      'Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian',
-      'Ionian, Phrygian, Dorian, Lydian, Mixolydian, Aeolian, Locrian',
-      'Dorian, Ionian, Phrygian, Mixolydian, Lydian, Aeolian, Locrian',
-      'Ionian, Dorian, Lydian, Phrygian, Mixolydian, Locrian, Aeolian']),
-    explain: '"<b>I D</b>on\'t <b>P</b>articularly <b>L</b>ike <b>M</b>odes <b>A</b> <b>L</b>ot" → I D P L M A L.',
-  }));
+  card('l2-mnemonic', 'dir', () => {
+    const N = (ids) => ids.map(id => M[id].name).join(', ');
+    const right = N(['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian']);
+    return {
+      kind: 'mc',
+      prompt: tr('Which order is correct (starting on C, D, E, F, G, A, B)?', 'Welche Reihenfolge stimmt (beginnend auf C, D, E, F, G, A, H)?'),
+      ...mcOpts(right, [right,
+        N(['ionian', 'phrygian', 'dorian', 'lydian', 'mixolydian', 'aeolian', 'locrian']),
+        N(['dorian', 'ionian', 'phrygian', 'mixolydian', 'lydian', 'aeolian', 'locrian']),
+        N(['ionian', 'dorian', 'lydian', 'phrygian', 'mixolydian', 'locrian', 'aeolian'])]),
+      explain: tr('"<b>I D</b>on\'t <b>P</b>articularly <b>L</b>ike <b>M</b>odes <b>A</b> <b>L</b>ot" → I D P L M A L.',
+        '„<b>I</b>m <b>D</b>unkeln <b>P</b>robt <b>L</b>isa <b>M</b>it <b>A</b>nna <b>L</b>aut“ → I D P L M Ä L.'),
+    };
+  });
 
   // Lesson 3: brightness & characteristic notes
   T.MODES.forEach(m => card(`l3-formula-${m.id}`, 'bright', () => ({
     kind: 'mc',
-    prompt: `"${m.compare}" Which mode is that?`,
+    prompt: tr(`"${m.compare}" Which mode is that?`, `„${m.compare}“ Welcher Modus ist das?`),
     ...mcOpts(m.name, T.MODES.map(x => x.name)),
-    explain: `${m.name}: ${m.compare} Characteristic note: ${m.signature.label}.`,
+    explain: `${m.name}: ${m.compare} ${tr('Characteristic note', 'Charakteristischer Ton')}: ${m.signature.label}.`,
   })));
   T.MODES.filter(m => m.id !== 'ionian').forEach(m => card(`l3-sig-${m.id}`, 'bright', () => {
-    const r = 60;
     const notes = T.scaleMidi('C', m.steps, 4);
+    const names = T.spellD('C', m.steps);
     const target = notes[m.signature.degree - 1];
     return {
       kind: 'tap',
-      prompt: `Here is C ${modeTag(m)}. Tap the <b>one note</b> that gives it its special color (compared to plain major/minor).`,
+      prompt: tr(`Here is C ${modeTag(m)}. Tap the <b>one note</b> that gives it its special color (compared to plain major/minor).`,
+        `Hier ist C-${modeTag(m)}. Tippe den <b>einen Ton</b> an, der ihm seine besondere Farbe gibt (im Vergleich zu normalem Dur/Moll).`),
       from: 60, octaves: 1,
-      marks: notes.map((n, i) => ({ midi: n, label: T.spell('C', m.steps)[i] })),
+      marks: notes.map((n, i) => ({ midi: n, label: names[i] })),
       target,
-      explain: `The ${m.signature.label} (${T.spell('C', m.steps)[m.signature.degree - 1]}). ${m.signature.why}`,
+      explain: tr(`The ${m.signature.label} (${names[m.signature.degree - 1]}). ${m.signature.why}`,
+        `Die ${m.signature.label} (${names[m.signature.degree - 1]}). ${m.signature.why}`),
       play: () => Sound.scale(notes, { updown: false }),
     };
   }));
   card('l3-order', 'bright', () => ({
     kind: 'order',
-    prompt: 'Tap the modes from <b>brightest</b> to <b>darkest</b>.',
+    prompt: tr('Tap the modes from <b>brightest</b> to <b>darkest</b>.', 'Tippe die Modi von <b>hell</b> nach <b>dunkel</b> an.'),
     items: shuffle(T.MODES.map(m => ({ id: m.id, label: m.name, color: m.color }))),
     answerOrder: T.BRIGHTNESS_ORDER.map(m => m.id),
-    explain: 'Lydian → Ionian → Mixolydian → Dorian → Aeolian → Phrygian → Locrian. Each step down lowers exactly one note.',
+    explain: T.BRIGHTNESS_ORDER.map(m => m.name).join(' → ') + '. ' + tr('Each step down lowers exactly one note.', 'Jeder Schritt nach unten erniedrigt genau einen Ton.'),
   }));
   T.MODES.filter(m => m.id !== 'locrian').forEach(m => card(`l3-ear-${m.id}`, 'bright', (c) => {
     const n = c.box < 2 ? 3 : 4;
@@ -108,57 +126,131 @@ const Quiz = (() => {
     const sorted = pool.sort((a, b) => Math.abs(a.brightness - m.brightness) - Math.abs(b.brightness - m.brightness));
     const distract = c.box < 2 ? shuffle(sorted.slice(2)).slice(0, n - 1) : sorted.slice(0, n - 1);
     const options = shuffle([m, ...distract]);
-    const root = 'C';
     return {
       kind: 'mc', ear: true,
-      prompt: '🎧 Listen. Which mode is this (on C)?',
+      prompt: tr('🎧 Listen. Which mode is this (on C)?', '🎧 Hör zu. Welcher Modus ist das (auf C)?'),
       options: options.map(x => x.name),
       answer: options.indexOf(m),
-      play: () => Sound.scale(T.scaleMidi(root, m.steps, 4), { updown: true, step: 0.26 }),
+      play: () => Sound.scale(T.scaleMidi('C', m.steps, 4), { updown: true, step: 0.26 }),
       autoplay: true,
-      explain: `${m.name}: ${m.mood}. Listen for the ${m.signature.label}.`,
+      explain: tr(`${m.name}: ${m.mood}. Listen for the ${m.signature.label}.`, `${m.name}: ${m.mood}. Achte auf die ${m.signature.label}.`),
     };
   }));
 
   // Lesson 4: history
   const HIST = [
-    ['hist-glarean', 'In 1547, who expanded the church modes from 8 to 12, adding Ionian and Aeolian?', 'Heinrich Glarean', ['Heinrich Glarean', 'Guido of Arezzo', 'J. S. Bach', 'Pythagoras'], 'Glarean, a Swiss humanist, did it in his book "Dodecachordon" ("twelve strings"). Ionian = future major, Aeolian = future minor.'],
-    ['hist-eight', 'How many modes did medieval chant theory originally use?', '8', ['8', '7', '12', '24'], '4 authentic modes (Dorian, Phrygian, Lydian, Mixolydian) plus 4 plagal "Hypo-" versions.'],
-    ['hist-hypo', 'What does "Hypo-" mean in Hypodorian?', 'Same home note, but the melody\'s range sits a 4th lower', ['Same home note, but the melody\'s range sits a 4th lower', 'Dorian played faster', 'Dorian without the 6th', 'Dorian on black keys'], 'Hypo = "below". Plagal modes keep the final but the range (ambitus) starts a 4th under it.'],
-    ['hist-locrian', 'Why did medieval theorists skip Locrian?', 'Its 5th is a tritone, so home never feels stable', ['Its 5th is a tritone, so home never feels stable', 'It was banned by the Pope', 'It only works on black keys', 'Nobody had discovered B yet'], 'B–F is a diminished 5th, the "diabolus in musica". A home chord without a perfect 5th wobbles.'],
-    ['hist-greek', 'The mode names come from ancient Greece. What\'s the twist?', 'The medieval theorists mixed them up: Greek "Dorian" was a different scale', ['The medieval theorists mixed them up: Greek "Dorian" was a different scale', 'Greek music had no scales', 'The names are from Latin, not Greek', 'Greeks only used Locrian'], 'Medieval writers borrowed the Greek names but mapped them onto different scales. Our "Dorian" isn\'t Plato\'s Dorian.'],
-    ['hist-bach', 'What did Bach\'s "Well-Tempered Clavier" (Book I, 1722) show off?', 'Pieces in all 24 major and minor keys', ['Pieces in all 24 major and minor keys', 'The first use of Lydian', 'How to play without a tonic', 'Music for 12 church modes'], 'Thanks to well-tempered tuning, every one of the 12 roots works for both major and minor: 24 keys.'],
-    ['hist-sowhat', 'Which 1959 track became the anthem of modal jazz?', '"So What" by Miles Davis', ['"So What" by Miles Davis', '"Take Five" by Dave Brubeck', '"Giant Steps" by John Coltrane', '"Fly Me to the Moon"'], 'From "Kind of Blue". It sits on D Dorian for 16 bars, moves up to E♭ Dorian, then comes back.'],
-    ['hist-final', 'The "finalis" (home note) of the authentic Dorian mode is…', 'D', ['D', 'C', 'E', 'A'], 'Authentic finals: Dorian D, Phrygian E, Lydian F, Mixolydian G.'],
-    ['hist-beethoven', 'Beethoven wrote a famous slow movement "in the Lydian mode". Which piece?', 'String Quartet Op. 132 ("Heiliger Dankgesang")', ['String Quartet Op. 132 ("Heiliger Dankgesang")', 'Symphony No. 5', 'Für Elise', 'Moonlight Sonata'], 'He wrote it after recovering from an illness and marked it "in der lydischen Tonart", a deliberate nod to old church music.'],
+    ['hist-glarean',
+      tr('In 1547, who expanded the church modes from 8 to 12, adding Ionian and Aeolian?', 'Wer erweiterte 1547 die Kirchentonarten von 8 auf 12 und fügte Ionisch und Äolisch hinzu?'),
+      'Heinrich Glarean', ['Heinrich Glarean', 'Guido von Arezzo', 'J. S. Bach', 'Pythagoras'],
+      tr('Glarean, a Swiss humanist, did it in his book "Dodecachordon" ("twelve strings"). Ionian = future major, Aeolian = future minor.',
+        'Glarean, ein Schweizer Humanist, in seinem Buch „Dodekachordon“ („zwölf Saiten“). Ionisch = späteres Dur, Äolisch = späteres Moll.')],
+    ['hist-eight',
+      tr('How many modes did medieval chant theory originally use?', 'Wie viele Modi kannte die mittelalterliche Choraltheorie ursprünglich?'),
+      '8', ['8', '7', '12', '24'],
+      tr('4 authentic modes (Dorian, Phrygian, Lydian, Mixolydian) plus 4 plagal "Hypo-" versions.',
+        '4 authentische Modi (Dorisch, Phrygisch, Lydisch, Mixolydisch) plus 4 plagale „Hypo-“-Varianten.')],
+    ['hist-hypo',
+      tr('What does "Hypo-" mean in Hypodorian?', 'Was bedeutet „Hypo-“ in Hypodorisch?'),
+      tr('Same home note, but the melody\'s range sits a 4th lower', 'Gleicher Grundton, aber der Tonumfang liegt eine Quarte tiefer'),
+      [tr('Same home note, but the melody\'s range sits a 4th lower', 'Gleicher Grundton, aber der Tonumfang liegt eine Quarte tiefer'), tr('Dorian played faster', 'Dorisch, nur schneller'), tr('Dorian without the 6th', 'Dorisch ohne 6. Stufe'), tr('Dorian on black keys', 'Dorisch auf schwarzen Tasten')],
+      tr('Hypo = "below". Plagal modes keep the final but the range (ambitus) starts a 4th under it.',
+        'Hypo = „unter“. Plagale Modi behalten die Finalis, aber der Ambitus beginnt eine Quarte darunter.')],
+    ['hist-locrian',
+      tr('Why did medieval theorists skip Locrian?', 'Warum ließen die mittelalterlichen Theoretiker Lokrisch weg?'),
+      tr('Its 5th is a tritone, so home never feels stable', 'Seine Quinte ist ein Tritonus, das Zuhause fühlt sich nie stabil an'),
+      [tr('Its 5th is a tritone, so home never feels stable', 'Seine Quinte ist ein Tritonus, das Zuhause fühlt sich nie stabil an'), tr('It was banned by the Pope', 'Der Papst hat ihn verboten'), tr('It only works on black keys', 'Er funktioniert nur auf schwarzen Tasten'), tr('Nobody had discovered B yet', 'Das H war noch nicht entdeckt')],
+      tr('B–F is a diminished 5th, the "diabolus in musica". A home chord without a perfect 5th wobbles.',
+        'H–F ist eine verminderte Quinte, der „diabolus in musica“. Ein Grundakkord ohne reine Quinte wackelt.')],
+    ['hist-greek',
+      tr('The mode names come from ancient Greece. What\'s the twist?', 'Die Namen der Modi stammen aus dem antiken Griechenland. Wo ist der Haken?'),
+      tr('The medieval theorists mixed them up: Greek "Dorian" was a different scale', 'Die mittelalterlichen Theoretiker haben sie verwechselt: Das griechische „Dorisch“ war eine andere Tonleiter'),
+      [tr('The medieval theorists mixed them up: Greek "Dorian" was a different scale', 'Die mittelalterlichen Theoretiker haben sie verwechselt: Das griechische „Dorisch“ war eine andere Tonleiter'), tr('Greek music had no scales', 'Griechische Musik hatte keine Tonleitern'), tr('The names are from Latin, not Greek', 'Die Namen sind lateinisch, nicht griechisch'), tr('Greeks only used Locrian', 'Die Griechen nutzten nur Lokrisch')],
+      tr('Medieval writers borrowed the Greek names but mapped them onto different scales. Our "Dorian" isn\'t Plato\'s Dorian.',
+        'Mittelalterliche Autoren übernahmen die griechischen Namen, ordneten sie aber anderen Tonleitern zu. Unser „Dorisch“ ist nicht Platons Dorisch.')],
+    ['hist-bach',
+      tr('What did Bach\'s "Well-Tempered Clavier" (Book I, 1722) show off?', 'Was führte Bachs „Wohltemperiertes Klavier“ (Teil I, 1722) vor?'),
+      tr('Pieces in all 24 major and minor keys', 'Stücke in allen 24 Dur- und Moll-Tonarten'),
+      [tr('Pieces in all 24 major and minor keys', 'Stücke in allen 24 Dur- und Moll-Tonarten'), tr('The first use of Lydian', 'Den ersten Einsatz von Lydisch'), tr('How to play without a tonic', 'Musik ganz ohne Grundton'), tr('Music for 12 church modes', 'Musik für 12 Kirchentonarten')],
+      tr('Thanks to well-tempered tuning, every one of the 12 roots works for both major and minor: 24 keys.',
+        'Dank wohltemperierter Stimmung funktioniert jeder der 12 Grundtöne für Dur und Moll: 24 Tonarten.')],
+    ['hist-sowhat',
+      tr('Which 1959 track became the anthem of modal jazz?', 'Welches Stück von 1959 wurde zur Hymne des Modal Jazz?'),
+      tr('"So What" by Miles Davis', '„So What“ von Miles Davis'),
+      [tr('"So What" by Miles Davis', '„So What“ von Miles Davis'), tr('"Take Five" by Dave Brubeck', '„Take Five“ von Dave Brubeck'), tr('"Giant Steps" by John Coltrane', '„Giant Steps“ von John Coltrane'), tr('"Fly Me to the Moon"', '„Fly Me to the Moon“')],
+      tr('From "Kind of Blue". It sits on D Dorian for 16 bars, moves up to E♭ Dorian, then comes back.',
+        'Von „Kind of Blue“. 16 Takte D-Dorisch, dann Es-Dorisch, dann zurück.')],
+    ['hist-final',
+      tr('The "finalis" (home note) of the authentic Dorian mode is…', 'Die „Finalis“ (Grundton) des authentischen dorischen Modus ist…'),
+      'D', ['D', 'C', 'E', 'A'],
+      tr('Authentic finals: Dorian D, Phrygian E, Lydian F, Mixolydian G.', 'Authentische Finales: Dorisch D, Phrygisch E, Lydisch F, Mixolydisch G.')],
+    ['hist-beethoven',
+      tr('Beethoven wrote a famous slow movement "in the Lydian mode". Which piece?', 'Beethoven schrieb einen berühmten langsamen Satz „in der lydischen Tonart“. Welches Werk?'),
+      tr('String Quartet Op. 132 ("Heiliger Dankgesang")', 'Streichquartett op. 132 („Heiliger Dankgesang“)'),
+      [tr('String Quartet Op. 132 ("Heiliger Dankgesang")', 'Streichquartett op. 132 („Heiliger Dankgesang“)'), tr('Symphony No. 5', '5. Sinfonie'), 'Für Elise', tr('Moonlight Sonata', 'Mondscheinsonate')],
+      tr('He wrote it after recovering from an illness and marked it "in der lydischen Tonart", a deliberate nod to old church music.',
+        'Er schrieb ihn nach überstandener Krankheit und überschrieb ihn mit „in der lydischen Tonart“, eine bewusste Verbeugung vor der alten Kirchenmusik.')],
   ];
   HIST.forEach(([id, prompt, correct, pool, explain]) => card(id, 'history', () => ({ kind: 'mc', prompt, ...mcOpts(correct, pool), explain })));
 
   // Lesson 5: from modes to keys
+  const K = T.keyName;
+  const FICTA_EXPLAIN = tr('Musica ficta: accidentals that weren\'t written but performed. They nudged the modes toward major and minor.',
+    'Musica ficta: Vorzeichen, die nicht notiert, aber gesungen wurden. Sie schoben die Modi Richtung Dur und Moll.');
   const FICTA = [
-    ['ficta-lydian', 'F Lydian kept getting a B♭ added (to avoid the F–B tritone). What does F Lydian + B♭ become?', 'F major', ['F major', 'F minor', 'D Dorian', 'B♭ Lydian']],
-    ['ficta-mixo', 'G Mixolydian gets an F♯ so it has a leading tone. Result?', 'G major', ['G major', 'G minor', 'E minor', 'G Lydian']],
-    ['ficta-dorian', 'D Dorian + B♭ becomes…', 'D natural minor (Aeolian)', ['D natural minor (Aeolian)', 'D major', 'F Lydian', 'D Phrygian']],
-    ['ficta-aeolian', 'A Aeolian + G♯ (leading tone) becomes…', 'A harmonic minor', ['A harmonic minor', 'A major', 'A Dorian', 'G Mixolydian']],
-    ['ficta-why', 'Why did composers keep adding sharps right before the final note?', 'To create a leading tone a half-step below home', ['To create a leading tone a half-step below home', 'Sharps were cheaper to print', 'To make the music louder', 'The organ was out of tune'], 'A half-step "pull" into the tonic (like B→C) makes cadences feel final. Only Ionian and Lydian have it built in.'],
-    ['ficta-two', 'After the Baroque era, the many church modes boiled down to how many "templates"?', '2: major and minor', ['2: major and minor', '7: one per white key', '12: one per root', '1: the chromatic scale'], 'Major (= Ionian) and minor (= Aeolian, with a raised 7th when needed). Put them on 12 roots and you get 24 keys.'],
-    ['ficta-dur', 'German "Dur" and "Moll" come from…', 'Latin durus (hard) and mollis (soft): the square and the round B', ['Latin durus (hard) and mollis (soft): the square and the round B', 'The names of two monks', 'Old German words for "day" and "night"', 'Greek mode names'], 'The square "b durum" (B♮) became our ♮ and ♯ and the German letter H. The round "b molle" (B♭) became ♭. That\'s why B♭ major is "B-Dur" in German!'],
-    ['ficta-relative', 'Which pair of modern keys is a "fossil" of the modal system, since they share all 7 notes?', 'C major and A minor', ['C major and A minor', 'C major and C minor', 'C major and G major', 'A minor and E minor'], 'C Ionian and A Aeolian use the same white keys. Every major key has a relative minor 3 half-steps below.'],
+    ['ficta-lydian',
+      tr('F Lydian kept getting a B♭ added (to avoid the F–B tritone). What does F Lydian + B♭ become?', 'F-Lydisch bekam ständig ein B statt H (um den Tritonus F–H zu vermeiden). Was wird aus F-Lydisch + B?'),
+      K('F', 'major'), [K('F', 'major'), K('F', 'minor'), tr('D Dorian', 'D-Dorisch'), tr('B♭ Lydian', 'B-Lydisch')]],
+    ['ficta-mixo',
+      tr('G Mixolydian gets an F♯ so it has a leading tone. Result?', 'G-Mixolydisch bekommt ein Fis als Leitton. Ergebnis?'),
+      K('G', 'major'), [K('G', 'major'), K('G', 'minor'), K('E', 'minor'), tr('G Lydian', 'G-Lydisch')]],
+    ['ficta-dorian',
+      tr('D Dorian + B♭ becomes…', 'D-Dorisch + B (statt H) wird zu…'),
+      tr('D natural minor (Aeolian)', 'natürliches d-Moll (Äolisch)'),
+      [tr('D natural minor (Aeolian)', 'natürliches d-Moll (Äolisch)'), K('D', 'major'), tr('F Lydian', 'F-Lydisch'), tr('D Phrygian', 'D-Phrygisch')]],
+    ['ficta-aeolian',
+      tr('A Aeolian + G♯ (leading tone) becomes…', 'A-Äolisch + Gis (Leitton) wird zu…'),
+      tr('A harmonic minor', 'harmonisches a-Moll'),
+      [tr('A harmonic minor', 'harmonisches a-Moll'), K('A', 'major'), tr('A Dorian', 'A-Dorisch'), tr('G Mixolydian', 'G-Mixolydisch')]],
+    ['ficta-why',
+      tr('Why did composers keep adding sharps right before the final note?', 'Warum fügten Komponisten kurz vor dem Schlusston immer wieder Kreuze hinzu?'),
+      tr('To create a leading tone a half-step below home', 'Um einen Leitton einen Halbton unter dem Grundton zu erzeugen'),
+      [tr('To create a leading tone a half-step below home', 'Um einen Leitton einen Halbton unter dem Grundton zu erzeugen'), tr('Sharps were cheaper to print', 'Kreuze waren billiger zu drucken'), tr('To make the music louder', 'Damit die Musik lauter wird'), tr('The organ was out of tune', 'Die Orgel war verstimmt')],
+      tr('A half-step "pull" into the tonic (like B→C) makes cadences feel final. Only Ionian and Lydian have it built in.',
+        'Ein Halbton-„Sog“ in den Grundton (wie H→C) lässt Kadenzen abgeschlossen klingen. Nur Ionisch und Lydisch haben ihn eingebaut.')],
+    ['ficta-two',
+      tr('After the Baroque era, the many church modes boiled down to how many "templates"?', 'Auf wie viele „Vorlagen“ schrumpften die Kirchentonarten nach dem Barock?'),
+      tr('2: major and minor', '2: Dur und Moll'),
+      [tr('2: major and minor', '2: Dur und Moll'), tr('7: one per white key', '7: eine pro weißer Taste'), tr('12: one per root', '12: eine pro Grundton'), tr('1: the chromatic scale', '1: die chromatische Tonleiter')],
+      tr('Major (= Ionian) and minor (= Aeolian, with a raised 7th when needed). Put them on 12 roots and you get 24 keys.',
+        'Dur (= Ionisch) und Moll (= Äolisch, bei Bedarf mit erhöhter 7. Stufe). Auf 12 Grundtöne gesetzt ergibt das 24 Tonarten.')],
+    ['ficta-dur',
+      tr('German "Dur" and "Moll" come from…', 'Die Wörter „Dur“ und „Moll“ kommen von…'),
+      tr('Latin durus (hard) and mollis (soft): the square and the round B', 'Lateinisch durus (hart) und mollis (weich): dem eckigen und dem runden b'),
+      [tr('Latin durus (hard) and mollis (soft): the square and the round B', 'Lateinisch durus (hart) und mollis (weich): dem eckigen und dem runden b'), tr('The names of two monks', 'Den Namen zweier Mönche'), tr('Old German words for "day" and "night"', 'Althochdeutschen Wörtern für „Tag“ und „Nacht“'), tr('Greek mode names', 'Griechischen Modusnamen')],
+      tr('The square "b durum" (B♮) became our ♮ and ♯ and the German letter H. The round "b molle" (B♭) became ♭. That\'s why B♭ major is "B-Dur" in German!',
+        'Das eckige „b durum“ (unser H) wurde zu ♮, ♯ und zum Buchstaben H. Das runde „b molle“ (unser B) wurde zu ♭. Deshalb heißt es im Deutschen B-Dur, im Englischen aber „B♭ major“!')],
+    ['ficta-relative',
+      tr('Which pair of modern keys is a "fossil" of the modal system, since they share all 7 notes?', 'Welches Tonarten-Paar ist ein „Fossil“ des modalen Systems, weil beide alle 7 Töne teilen?'),
+      `${K('C', 'major')} & ${K('A', 'minor')}`,
+      [`${K('C', 'major')} & ${K('A', 'minor')}`, `${K('C', 'major')} & ${K('C', 'minor')}`, `${K('C', 'major')} & ${K('G', 'major')}`, `${K('A', 'minor')} & ${K('E', 'minor')}`],
+      tr('C Ionian and A Aeolian use the same white keys. Every major key has a relative minor 3 half-steps below.',
+        'C-Ionisch und A-Äolisch benutzen dieselben weißen Tasten. Jede Dur-Tonart hat eine Paralleltonart in Moll, 3 Halbtöne tiefer.')],
   ];
   FICTA.forEach(([id, prompt, correct, pool, explain]) => card(id, 'upgrade', () => ({
-    kind: 'mc', prompt, ...mcOpts(correct, pool),
-    explain: explain || 'Musica ficta: accidentals that weren\'t written but performed. They nudged the modes toward major and minor.',
+    kind: 'mc', prompt, ...mcOpts(correct, pool), explain: explain || FICTA_EXPLAIN,
   })));
   T.MODES.filter(m => m.id !== 'ionian').forEach(m => card(`l5-parent-${m.id}`, 'upgrade', () => {
-    const parents = ['C', 'G', 'F', 'D', 'B♭'];
-    const parent = pick(parents);
+    const parent = pick(['C', 'G', 'F', 'D', 'B♭']);
     const majorNames = T.spell(parent, M.ionian.steps);
     const root = majorNames[m.degree - 1];
+    const pool = ['C', 'G', 'F', 'D', 'B♭', 'A', 'E♭', root].map(r => K(r, 'major'));
     return {
       kind: 'mc',
-      prompt: `<b>${root} ${m.name}</b> uses the same notes as which major scale?`,
-      ...mcOpts(`${parent} major`, ['C major', 'G major', 'F major', 'D major', 'B♭ major', 'A major', 'E♭ major'].concat([`${root} major`])),
-      explain: `${m.name} is mode #${m.degree}, so ${root} is the ${m.degree}${['st', 'nd', 'rd'][m.degree - 1] || 'th'} note of ${parent} major (${majorNames.join(' ')}).`,
+      prompt: tr(`<b>${D(root)} ${m.name}</b> uses the same notes as which major scale?`,
+        `<b>${D(root)}-${m.name}</b> benutzt dieselben Töne wie welche Dur-Tonleiter?`),
+      ...mcOpts(K(parent, 'major'), pool),
+      explain: tr(`${m.name} is mode #${m.degree}, so ${D(root)} is the ${ordinal(m.degree)} note of ${K(parent, 'major')} (${majorNames.map(D).join(' ')}).`,
+        `${m.name} ist Modus Nr. ${m.degree}, also ist ${D(root)} der ${ordinal(m.degree)} Ton von ${K(parent, 'major')} (${majorNames.map(D).join(' ')}).`),
     };
   }));
 
@@ -167,9 +259,10 @@ const Quiz = (() => {
     const root = pick(c.box < 2 ? ['C', 'D', 'G', 'F'] : ROOTS);
     return {
       kind: 'build',
-      prompt: `Build <b>${root} ${m.name}</b>. Tap its 7 notes (${m.compare.toLowerCase()})`,
+      prompt: tr(`Build <b>${D(root)} ${m.name}</b>. Tap its 7 notes (${m.compare.toLowerCase()})`,
+        `Baue <b>${D(root)}-${m.name}</b>. Tippe seine 7 Töne an (${m.compare})`),
       root, mode: m,
-      explain: `${root} ${m.name} = ${T.spell(root, m.steps).join(' ')}`,
+      explain: tr(`${D(root)} ${m.name} = `, `${D(root)}-${m.name} = `) + T.spellD(root, m.steps).join(' '),
     };
   }));
   T.MODES.filter(m => m.id !== 'locrian').forEach(m => card(`l6-vamp-${m.id}`, 'today', (c) => {
@@ -180,21 +273,21 @@ const Quiz = (() => {
     const chords = m.vamp.map(([d]) => T.chordName(root, m.steps, d)).join(' → ');
     return {
       kind: 'mc', ear: true,
-      prompt: '🎧 A band jams this groove, then plays the scale. Which mode?',
+      prompt: tr('🎧 A band jams this groove, then plays the scale. Which mode?', '🎧 Eine Band jammt diesen Groove und spielt dann die Tonleiter. Welcher Modus?'),
       options: options.map(x => x.name),
       answer: options.indexOf(m),
       play: () => Sound.sequence(vampSequence(m, root), 0.3),
       autoplay: true,
-      explain: `${root} ${m.name}: ${chords}. ${m.mood}.`,
+      explain: `${D(root)}${tr(' ', '-')}${m.name}: ${chords}. ${m.mood}.`,
     };
   }));
   const SONGS = [
-    ['song-sowhat', '"So What" by Miles Davis is the classic example of…', 'dorian'],
-    ['song-simpsons', 'The Simpsons theme opens with that floating raised 4th. Which mode?', 'lydian'],
-    ['song-norwegian', '"Norwegian Wood" (The Beatles) is major with a flat 7th. Which mode?', 'mixolydian'],
-    ['song-flamenco', 'Flamenco guitar\'s dark half-step "sting" above the root comes from…', 'phrygian'],
-    ['song-scarborough', '"Scarborough Fair" is a famous folk tune in…', 'dorian'],
-    ['song-alabama', '"Sweet Home Alabama" (D–C–G) grooves in which mode?', 'mixolydian'],
+    ['song-sowhat', tr('"So What" by Miles Davis is the classic example of…', '„So What“ von Miles Davis ist das Paradebeispiel für…'), 'dorian'],
+    ['song-simpsons', tr('The Simpsons theme opens with that floating raised 4th. Which mode?', 'Die Simpsons-Melodie beginnt mit dieser schwebenden erhöhten Quarte. Welcher Modus?'), 'lydian'],
+    ['song-norwegian', tr('"Norwegian Wood" (The Beatles) is major with a flat 7th. Which mode?', '„Norwegian Wood“ (The Beatles) ist Dur mit kleiner Septime. Welcher Modus?'), 'mixolydian'],
+    ['song-flamenco', tr('Flamenco guitar\'s dark half-step "sting" above the root comes from…', 'Der dunkle Halbton-„Stich“ über dem Grundton in der Flamenco-Gitarre kommt von…'), 'phrygian'],
+    ['song-scarborough', tr('"Scarborough Fair" is a famous folk tune in…', '„Scarborough Fair“ ist ein berühmtes Volkslied in…'), 'dorian'],
+    ['song-alabama', tr('"Sweet Home Alabama" (D–C–G) grooves in which mode?', '„Sweet Home Alabama“ (D–C–G) groovt in welchem Modus?'), 'mixolydian'],
   ];
   SONGS.forEach(([id, prompt, mid]) => card(id, 'today', () => ({
     kind: 'mc', prompt, ...mcOpts(M[mid].name, T.MODES.map(x => x.name)),
@@ -214,13 +307,13 @@ const Quiz = (() => {
       if (answered) return;
       answered = true;
       Sound.blip(correct);
-      fb.innerHTML = `<div class="fb ${correct ? 'good' : 'bad'}"><b>${correct ? pick(['Correct!', 'Nailed it!', 'Yes!', 'Bingo!', 'C:\\> OK']) : pick(['Not quite.', 'Close, but no.', 'ERROR 404: right answer not found.'])}</b> ${extra}<div class="explain">${q.explain || ''}</div></div>`;
+      fb.innerHTML = `<div class="fb ${correct ? 'good' : 'bad'}"><b>${correct ? pick(tr(['Correct!', 'Nailed it!', 'Yes!', 'Bingo!', 'C:\\> OK'], ['Richtig!', 'Volltreffer!', 'Ja!', 'Bingo!', 'C:\\> OK'])) : pick(tr(['Not quite.', 'Close, but no.', 'ERROR 404: right answer not found.'], ['Nicht ganz.', 'Knapp daneben.', 'FEHLER 404: Richtige Antwort nicht gefunden.']))}</b> ${extra}<div class="explain">${q.explain || ''}</div></div>`;
       el.classList.add(correct ? 'is-good' : 'is-bad');
       done(correct);
     }
 
     if (q.play) {
-      const pb = html(`<button class="btn play" type="button">▶ ${q.ear ? 'Listen' : 'Hear it'}</button>`);
+      const pb = html(`<button class="btn play" type="button">▶ ${q.ear ? tr('Listen', 'Anhören') : tr('Hear it', 'Abspielen')}</button>`);
       pb.onclick = () => q.play();
       body.appendChild(pb);
       if (q.autoplay) setTimeout(() => { if (el.isConnected) q.play(); }, 250);
@@ -275,12 +368,12 @@ const Quiz = (() => {
           if (answered) return;
           if (m === r) return; // root fixed
           kb.has(m, 'sel') ? kb.unmark(m, 'sel') : kb.mark(m, 'sel');
-          count.textContent = `${selected().length + 1} / 7 notes`;
+          count.textContent = `${selected().length + 1} / 7 ${tr('notes', 'Töne')}`;
         },
       });
-      kb.mark(r, 'root', q.root);
+      kb.mark(r, 'root', T.dispNote(q.root));
       const selected = () => [...kb.keys.keys()].filter(m => kb.has(m, 'sel'));
-      const ctrl = html(`<div class="row"><span class="count">1 / 7 notes</span><button class="btn" type="button" data-a="hear">▶ Hear mine</button><button class="btn primary" type="button" data-a="check">Check ✓</button></div>`);
+      const ctrl = html(`<div class="row"><span class="count">1 / 7 ${tr('notes', 'Töne')}</span><button class="btn" type="button" data-a="hear">▶ ${tr('Hear mine', 'Meine anhören')}</button><button class="btn primary" type="button" data-a="check">${tr('Check', 'Prüfen')} ✓</button></div>`);
       const count = ctrl.querySelector('.count');
       body.appendChild(ctrl);
       ctrl.querySelector('[data-a=hear]').onclick = () => {
@@ -296,7 +389,7 @@ const Quiz = (() => {
         sel.forEach(m => kb.mark(m, target.has(m % 12) ? 'right' : 'wrong'));
         q.mode.steps.forEach(s => kb.mark(r + s, 'right'));
         Sound.scale(q.mode.steps.map(s => r + s), { updown: false, step: 0.24 });
-        finish(okLoose, !ok && okLoose ? '(Right notes! Tip: stay inside one octave above the root.)' : '');
+        finish(okLoose, !ok && okLoose ? tr('(Right notes! Tip: stay inside one octave above the root.)', '(Richtige Töne! Tipp: Bleib innerhalb einer Oktave über dem Grundton.)') : '');
       };
       el._keys = (k) => { if (k === 'Enter') ctrl.querySelector('[data-a=check]').click(); };
     }
@@ -305,7 +398,7 @@ const Quiz = (() => {
       const picked = [];
       const slots = html(`<div class="slots">${q.items.map((_, i) => `<span class="slot">${i + 1}</span>`).join('')}</div>`);
       const pool = html('<div class="opts pills"></div>');
-      body.appendChild(html('<div class="order-scale"><span>☀ brightest</span><span>darkest ☾</span></div>'));
+      body.appendChild(html(`<div class="order-scale"><span>☀ ${tr('brightest', 'am hellsten')}</span><span>${tr('darkest', 'am dunkelsten')} ☾</span></div>`));
       body.appendChild(slots);
       body.appendChild(pool);
       const redraw = () => {
@@ -327,12 +420,12 @@ const Quiz = (() => {
           if (picked.length === q.items.length) {
             const wrongAt = picked.map((id, i) => id === q.answerOrder[i]).filter(x => !x).length;
             [...slots.children].forEach((s, i) => s.classList.add(picked[i] === q.answerOrder[i] ? 'right' : 'wrong'));
-            finish(wrongAt === 0, wrongAt ? `${q.items.length - wrongAt}/${q.items.length} in the right spot.` : '');
+            finish(wrongAt === 0, wrongAt ? `${q.items.length - wrongAt}/${q.items.length} ${tr('in the right spot.', 'an der richtigen Stelle.')}` : '');
           }
         };
         pool.appendChild(b);
       });
-      const undo = html('<button class="btn ghost" type="button">↶ Undo</button>');
+      const undo = html(`<button class="btn ghost" type="button">↶ ${tr('Undo', 'Zurück')}</button>`);
       undo.onclick = () => { if (!answered) { picked.pop(); redraw(); } };
       body.appendChild(undo);
       redraw();
@@ -349,7 +442,7 @@ const Quiz = (() => {
       <div class="quiz-head"><span class="quiz-title">${title}</span><span class="quiz-meta"><span class="combo"></span><span class="qn"></span></span></div>
       <div class="bar"><i></i></div>
       <div class="quiz-stage"></div>
-      <div class="quiz-actions"><button class="btn primary next" type="button" hidden>Next ⏎</button></div>
+      <div class="quiz-actions"><button class="btn primary next" type="button" hidden>${tr('Next', 'Weiter')} ⏎</button></div>
     </div>`);
     container.innerHTML = '';
     container.appendChild(root);
@@ -377,14 +470,14 @@ const Quiz = (() => {
           bestCombo = Math.max(bestCombo, combo);
           const bonus = combo >= 3 ? Math.min(combo - 2, 5) * 2 : 0;
           Progress.addXP(xpPer + bonus);
-          if (it.q.ear) { earStreak++; if (earStreak >= 5) Progress.badge('golden-ear', 'Golden Ear (5 ear questions in a row)'); }
-          if (combo === 10) Progress.badge('combo10', 'Combo ×10');
+          if (it.q.ear) { earStreak++; if (earStreak >= 5) Progress.badge('golden-ear', tr('Golden Ear (5 ear questions in a row)', 'Goldenes Ohr (5 Hörfragen in Folge)')); }
+          if (combo === 10) Progress.badge('combo10', tr('Combo ×10', 'Kombo ×10'));
         } else { combo = 0; if (it.q.ear) earStreak = 0; }
         const c = root.querySelector('.combo');
         c.textContent = combo >= 2 ? `🔥 ×${combo}` : '';
         c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
         next.hidden = false;
-        next.textContent = i + 1 < items.length ? 'Next ⏎' : 'Finish ⏎';
+        next.textContent = i + 1 < items.length ? tr('Next ⏎', 'Weiter ⏎') : tr('Finish ⏎', 'Fertig ⏎');
         next.focus({ preventScroll: true });
       });
     }
@@ -399,8 +492,8 @@ const Quiz = (() => {
       Progress.setBest(bestCombo);
       stage.innerHTML = `<div class="result">
         <div class="big">${score}/${items.length}</div>
-        <div>${pct === 100 ? 'Flawless. The monks would be proud. 🎉' : pct >= 70 ? 'Solid! A few more reps and it sticks.' : 'Good start. Mistakes are where the learning happens; these cards will come back soon.'}</div>
-        <div class="muted">Best combo: ×${bestCombo}</div>
+        <div>${pct === 100 ? tr('Flawless. The monks would be proud. 🎉', 'Fehlerfrei. Die Mönche wären stolz. 🎉') : pct >= 70 ? tr('Solid! A few more reps and it sticks.', 'Stark! Noch ein paar Wiederholungen und es sitzt.') : tr('Good start. Mistakes are where the learning happens; these cards will come back soon.', 'Guter Anfang. Aus Fehlern lernt man am meisten; diese Karten kommen bald wieder.')}</div>
+        <div class="muted">${tr('Best combo', 'Beste Kombo')}: ×${bestCombo}</div>
       </div>`;
       next.hidden = true;
       document.removeEventListener('keydown', keyHandler);

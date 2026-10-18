@@ -22,15 +22,17 @@
       <a href="#/lab">Lab</a>
     </nav>
     <div id="hud" class="hud"></div>
+    <button id="lang" class="lang-btn" type="button">DE</button>
     <button id="stopall" class="icon-btn" type="button" title="Stop all sound" aria-label="Stop all sound">■</button>
   </header>
   <main id="app" tabindex="-1"></main>
   <footer class="foot">
-    <span>Made with Web Audio. Turn your sound on 🔊</span>
-    <span>Progress is saved in this browser. <button id="reset" class="linkish" type="button">Reset progress</button></span>
+    <span id="foot-sound">Made with Web Audio. Turn your sound on 🔊</span>
+    <span><span id="foot-save">Progress is saved in this browser.</span> <button id="reset" class="linkish" type="button">Reset progress</button></span>
   </footer>
   <div id="toasts" aria-live="polite"></div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/theory.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/ui.js"></script>

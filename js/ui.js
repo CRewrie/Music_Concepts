@@ -100,8 +100,8 @@ const UI = (() => {
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage unavailable */ } };
 
   const LEVELS = [
-    [0, 'BIOS'], [80, 'DOS Prompt'], [220, 'Batch Scripter'], [450, 'Mode Hacker'],
-    [800, 'Glarean.exe'], [1300, 'Modal Wizard'], [2000, 'Kernel Composer'],
+    [0, 'BIOS'], [80, tr('DOS Prompt', 'DOS-Prompt')], [220, tr('Batch Scripter', 'Batch-Skripter')], [450, tr('Mode Hacker', 'Modus-Hacker')],
+    [800, 'Glarean.exe'], [1300, tr('Modal Wizard', 'Modal-Zauberer')], [2000, tr('Kernel Composer', 'Kernel-Komponist')],
   ];
   function level(xp = state.xp) {
     let i = 0;
@@ -122,7 +122,7 @@ const UI = (() => {
       save();
       listeners.forEach(f => f());
       const after = level();
-      if (after.n > before) toast(`⬆ LEVEL UP: ${after.name}`, 'level');
+      if (after.n > before) toast(`⬆ ${tr('LEVEL UP', 'LEVEL-UP')}: ${after.name}`, 'level');
     },
     completeLesson(id) {
       const first = !state.lessons[id];
@@ -150,7 +150,7 @@ const UI = (() => {
       if (state.badges.includes(id)) return;
       state.badges.push(id);
       save();
-      toast(`🏅 Badge unlocked: ${label}`, 'badge');
+      toast(`🏅 ${tr('Badge unlocked', 'Abzeichen freigeschaltet')}: ${label}`, 'badge');
       listeners.forEach(f => f());
     },
     setBest(n) { if (n > state.best) { state.best = n; save(); } },
