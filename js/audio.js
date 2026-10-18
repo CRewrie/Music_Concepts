@@ -5,9 +5,61 @@ const Sound = (() => {
   let activeTimers = [];
   const listeners = new Set();
 
+  // ---------- Mobile unlocking ----------
+  // iOS plays Web Audio on the "ambient" channel, which the silent switch mutes.
+  // Newer Safari lets us ask for the "playback" channel; older iOS needs a looping
+  // silent <audio> element started from a tap to switch the channel.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* unsupported */ }
+  let silentEl = null;
+
+  function silentWavUrl() {
+    const rate = 8000, n = rate / 2; // 0.5 s, 8-bit mono
+    const buf = new Uint8Array(44 + n);
+    const dv = new DataView(buf.buffer);
+    const str = (o, s) => [...s].forEach((c, i) => buf[o + i] = c.charCodeAt(0));
+    str(0, 'RIFF'); dv.setUint32(4, 36 + n, true); str(8, 'WAVEfmt ');
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, rate, true); dv.setUint32(28, rate, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true);
+    str(36, 'data'); dv.setUint32(40, n, true);
+    buf.fill(128, 44);
+    return 'data:audio/wav;base64,' + btoa(String.fromCharCode(...buf));
+  }
+
+  function startSilentLoop() {
+    if (!isIOS || navigator.audioSession) return;
+    if (!silentEl) {
+      silentEl = document.createElement('audio');
+      silentEl.setAttribute('x-webkit-airplay', 'deny');
+      silentEl.setAttribute('playsinline', '');
+      silentEl.loop = true;
+      silentEl.preload = 'auto';
+      silentEl.src = silentWavUrl();
+    }
+    if (silentEl.paused) silentEl.play().catch(() => { /* retried on next tap */ });
+  }
+
+  // Called from real user gestures (tap/click/key): create/resume the context.
+  function unlock() {
+    startSilentLoop();
+    const c = ensure();
+    if (c.state !== 'running') c.resume().catch(() => { /* retried on next tap */ });
+    // Old iOS: playing a buffer inside the gesture is what actually unlocks output.
+    const b = c.createBufferSource();
+    b.buffer = c.createBuffer(1, 1, 22050);
+    b.connect(c.destination);
+    b.start(0);
+  }
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { silentEl?.pause(); return; }
+    if (ctx && ctx.state !== 'running') ctx.resume().catch(() => { /* needs a tap */ });
+  });
+
   function ensure() {
     if (ctx) {
-      if (ctx.state === 'suspended') ctx.resume();
+      // iOS uses "interrupted" (calls, lock screen) in addition to "suspended".
+      if (ctx.state !== 'running') ctx.resume().catch(() => { /* needs a tap */ });
       return ctx;
     }
     ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -179,6 +231,6 @@ const Sound = (() => {
     note, chord, sequence, scale, startDrone, stopDrone, stop, blip,
     isDroning: () => !!drone,
     onNote: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
-    unlock: ensure,
+    unlock,
   };
 })();

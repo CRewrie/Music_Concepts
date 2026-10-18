@@ -275,7 +275,6 @@
     app.focus({ preventScroll: true });
   }
   window.addEventListener('hashchange', route);
-  document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
   $('#reset').onclick = () => {
     if (confirm(tr('Reset all progress (XP, lessons, cards)?', 'Gesamten Fortschritt zurücksetzen (XP, Lektionen, Karten)?'))) { Progress.reset(); route(); }
